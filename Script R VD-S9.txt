@@ -1,0 +1,626 @@
+# ----------------------------- SEMINARI 9. INTERACCIÓ i ANIMACIÓ en R ----------------------
+# ---------------------------------- SCRIPTS DE LA PRESENTACIÓ
+
+# --------------- 2. plotly()
+# Carregar paquets previs
+> install.packages('tidyverse') # Descarregar paquet (1a vegada)
+> library (tidyverse)         # Cada cop que obrim sessió
+> install.packages('ggplot2') # Descarregar paquet (1a vegada)
+> library (ggplot2)         # Cada cop que obrim sessió
+
+# Carregar paquet
+> install.packages('plotly') # Descarregar paquet (1a vegada)
+> library (plotly)         # Cada cop que obrim sessió
+>
+
+# ----- 2.1. FUNCIONS ggploly(), plot_ly()
+
+# Funció ggplotly()
+> p <- ggplot(mtcars,aes(x=mpg,y=hp)) + geom_point()
+> ggplotly(p)
+>
+# Funció plot_ly()
+> plot_ly(mtcars,x=~mpg,y=~hp,type = 'scatter',mode = 'markers')
+>
+
+# ----- 2.2. Scatters PLOTS 3D bàsics
+# Sobre dataset mtcars plot molt bàsic:
+> plot_ly(mtcars, x = ~wt, y = ~hp, z = ~qsec, type='scatter3d', mode='markers', color = ~am)
+> 
+
+# Canviem tipus de la variable amb de binari -> string
+> mtcars$am[which(mtcars$am == 0)] <- 'Automatic' 
+> mtcars$am[which(mtcars$am == 1)] <- 'Manual' 
+> mtcars$am <- as.factor(mtcars$am)
+> plot_ly(mtcars, x = ~wt, y = ~hp, z = ~qsec, color = ~am, type='scatter3d', mode='markers', colors = c('#FF0000', '#0000FF'))
+>
+
+# Afegir escales de colors
+> plot_ly(mtcars, x = ~wt, y = ~hp, z = ~qsec,type='scatter3d', mode='markers', marker = list(color = ~mpg, showscale = TRUE)) 
+>
+
+# Afegir etiquetes als eixos i a l'escala de colors:
+> plot_ly(mtcars, x = ~wt, y = ~hp, z = ~qsec, type='scatter3d', mode='markers', marker = list(color = ~mpg, colorscale = c('#FF0000', '#0000FF'), showscale = TRUE)) %>% layout(scene=list(xaxis=list(title='Weight'), yaxis=list(title='Gross Horsepower'), zaxis=list(title='1/4 mile time')), annotations = list(x = 1.20, y = 1.03, text = 'Miles/(US) gallon', showarrow = FALSE ))
+>
+
+# EXERCICI: Modificar etiqueta escala de colors donant valors 0 i 1 a paràmetres x=y, y= de la comanda annotations i mirar l'efecte.
+# Posar showarrow=TRUE i mirar l'efecte:
+> plot_ly(mtcars, x = ~wt, y = ~hp, z = ~qsec, type='scatter3d', mode='markers', marker = list(color = ~mpg, colorscale = c('#FF0000', '#0000FF'), showscale = TRUE)) %>% layout(scene=list(xaxis=list(title='Weight'), yaxis=list(title='Gross Horsepower'), zaxis=list(title='1/4 mile time')), annotations = list(x = 0.5, y = 1.0, text = 'Miles/(US) gallon', showarrow = TRUE ))
+>
+
+# ----- 2.3. Superficies 3D
+# Matriu volcano
+> str(volcano)
+> volcano
+
+# Visualitzar matriu de punts en forma de superficie
+> plot_ly(z=~volcano) %>% add_surface() 
+>
+
+# Superfície amb contorns interactius i definició de càmera
+> plot_ly(z=~volcano) %>% add_surface(contours = list( z = list( show=TRUE, usecolormap=TRUE, highlightcolor="#ff0000", project=list(z=TRUE)))) %>% layout( scene = list( camera=list( eye = list(x=1.87, y=0.88, z=-0.64)))) 
+>
+
+# Múltiples superfícies
+# Dibuixar tres superficies volcano en z positiu i escaledes a la meitat respecte anterior:
+> plot_ly(z=~volcano) %>% add_surface() %>% add_surface(z= ~volcano*0.5+150, opacity =0.50) %>% add_surface(z= ~volcano*0.25+250, opacity =0.75)
+>
+
+# ----- 2.4. Organitzar Múltiples Vistes
+
+# Treballarem amb el dataset lifeEspectancy_subset
+> setwd("C:/Users/enric/Documents/R")
+> LE <- read.csv('./lifeExpectancy_GDP_subset.csv')
+> str(LE)
+>
+
+2.4.a) GRAELLES FIXES
+# Vistes d'iguals tamanys en fila
+> LE_Afg <- LE %>% filter(Country=='Afghanistan') 
+> p1 <- plot_ly(LE_Afg,x=~Year,y=~LifeExpectancy) %>% add_lines(name="Afganistan")
+> LE_SP <- LE %>% filter(Country=='Spain') 
+> p2 <- plot_ly(LE_SP,x=~Year,y=~LifeExpectancy) %>% add_lines(name="Espanya")
+> LE_SWR <- LE %>% filter(Country=='Switzerland') 
+> p3 <- plot_ly(LE_SWR,x=~Year,y=~LifeExpectancy) %>% add_lines(name="Suissa")
+> LE_Jpn <- LE %>% filter(Country=='Japan') 
+> p4 <- plot_ly(LE_Jpn,x=~Year,y=~LifeExpectancy) %>% add_lines(name="Japo")
+> subplot(p1,p2)
+> subplot(p1,p2,p3)
+> subplot(p1,p2,p3,p4)
+>
+
+# Vistes d'iguals tamanys en matriu
+# Igual mida
+> subplot(p1,p2,p3,p4, nrows=2, heights=c(0.5,0.5)) 
+>
+
+# Escales canviades: fila superior a 0.3 i fila inferior a 0.7, amplada superior a 0.3 i inferior a 0.7
+> subplot(p1,p2,p3,p4, nrows=2, margin=0.04, heights=c(0.3,0.7), widths=c(0.7,0.3)) 
+>
+
+# Vistes compartint un eix
+> vars <- setdiff(names(LE), "Year")
+> plots <- lapply(vars, function(var){ plot_ly(LE, x=~Year, y=as.formula(paste0("~",var))) %>% add_lines(name=var)})
+> subplot(plots, nrows=length(plots), margin=0.04, shareX=TRUE, titleX=FALSE)
+>
+
+2.4.b) GRAELLES VARIABLES (SUBPLOTS RECURSIUS)
+# Muntar graella variable:
+# -------------
+# | 1 | 2 | 3 |
+# -------------
+# |  4  |  5  |
+# -------------
+# |     6     |
+# -------------
+
+> LE_Ht <- LE %>% filter(Country=='Haiti') 
+> p5 <- plot_ly(LE_Ht,x=~Year,y=~LifeExpectancy) %>% add_lines(name="Haiti")
+> LE_WA <- LE %>% filter(Country=='World Average') 
+> p6 <- plot_ly(LE_WA,x=~Year,y=~LifeExpectancy) %>% add_lines(name="Promig Mundial")
+> s1 <- subplot(p1,p2,p3, nrows=1, margin=0.04)
+> s2 <- subplot(p4,p5, nrows=1, margin=0.04)
+> s3 <- subplot(p6, margin=0.04)
+> subplot(s1,s2,s3, nrows=3, margin=0.04, heights=c(0.5,0.3,0.2))
+
+# ----- 2.5. Animacio
+
+# Treballarem amb el dataset lifeEspectancy_GDP_subset
+> setwd("C:/Users/enric/Documents/R")
+> LE <- read.csv('./lifeExpectancy_GDP_subset.csv')
+> str(LE)
+
+# Frame de l'any 2000 amb ggplot()
+> LE2000 <- LE %>% filter(Year==2000)
+> ggplot(LE2000,aes(x=gdpPercap, y=LifeExpectancy, color=Country)) + geom_point()
+>
+
+# Frame de l'any 2000 amb plot_ly
+> LE2000 <- LE %>% filter(Year==2000)
+> plot_ly(LE2000,x=~gdpPercap, y=~LifeExpectancy,color=~Country,type='scatter',mode='markers')
+>
+
+# Animació simple frame a frame per any
+# Amb plot_ly
+> fig <- plot_ly(LE,x=~gdpPercap, y=~LifeExpectancy,color=~Country,frame=~Year,type='scatter',mode='markers')
+> fig
+>
+
+# ANIMACIÓ AMB OPCIONS: Transició entre Frames
+> fig %>% animation_opts(1000, easing="elastic", redraw=FALSE)
+>
+
+# ANIMACIÓ AMB OPCIONS: Transició entre Frames i Configurant botó animació (Play)
+> fig %>% animation_opts(1000, easing="elastic", redraw=FALSE) %>% animation_button(x=1, xanchor='right', y=0, yanchor='bottom')
+>
+
+# ANIMACIÓ AMB OPCIONS: Transició entre frames, configurant botó animació (Play) i el slider de temps
+> fig %>% animation_opts(1000, easing="elastic", redraw=FALSE) %>% animation_button(x=1, xanchor='right', y=0, yanchor='bottom') %>% animation_slider(currentvalue=list(prefix="YEAR ", font=list(color="green")))
+>
+
+# ----- 2.6. Guardar objecte plotly en fitxer HTML
+
+# Treballarem amb dataset lifeExpectancy_GDP_subset.csv
+> setwd("C:/Users/enric/Documents/R")
+> LE <- read.csv('./lifeExpectancy_GDP_subset.csv')
+
+> LE_Afg <- LE %>% filter(Country=='Afghanistan') 
+> p1 <- plot_ly(LE_Afg,x=~Year,y=~LifeExpectancy) %>% add_lines(name="Afganistan")
+> LE_SP <- LE %>% filter(Country=='Spain') 
+> p2 <- plot_ly(LE_SP,x=~Year,y=~LifeExpectancy) %>% add_lines(name="Espanya")
+> p <- subplot(p1,p2)
+
+> widget_file_size <- function(p) {
+  d <- getwd()
+  withr::with_dir(d, htmlwidgets::saveWidget(p, "index.html"))
+  f <- file.path(d, "index.html")
+  mb <- round(file.info(f)$size / 1e6, 3)
+  message("File is: ", mb," MB")
+}
+> widget_file_size(p) 	# Versió completa HTML
+
+> widget_file_size(partial_bundle(p)) # Versió reduida HTML
+> 
+
+# ----- 3. gganimate: Ranking de Barres Animades (Animated Bar Race Ranking)
+
+# 3.1. Llibreries a utilitzar i càrrega del dataset
+#
+> library(tidyverse)   		# Data Massage
+> library(ggplot2)     		# Gràfiques estàtiques
+> install.packages("gifski") 	# Càrrega paquet gifski (primera vegada)
+> library(gifski)		# Generació fitxer animació GIF
+> install.packages("av") 	# Càrrega paquet av (primera vegada)
+> library(av)			# Generació fitxer animació AVI
+> install.packages("gganimate") # Càrrega paquet gganimate (primera vegada)
+> library(gganimate)		# Generació de frames i la seva compilació per a generar fitxer animació
+>
+
+# Treballarem amb el dataset GDP_tidy, adaptat de GDP (GDP dels països del món de 1990 a 2010)
+> setwd("C:/Users/enric/Documents/R")
+> gdp_tidy <- read.csv('./gdp_tidy.csv')
+> str(gdp_tidy)
+
+# 3.2. Data Massaging: Filtrar dataset amb els 10 millors de cada any i definir noves columness que ajudaran a displaiar (rank,Value_rel,Value_lbl)
+> gdp_formatted <- gdp_tidy %>%
+  group_by(year) %>%
+  # The * 1 makes it possible to have non-integer ranks while sliding
+  mutate(rank = rank(-value),
+         Value_rel = value/value[rank==1],
+         Value_lbl = paste0(" ",round(value/1e9))) %>%
+  group_by(country_name) %>% 
+  filter(rank <=10) %>%
+  ungroup()
+>
+
+# 3.3. Generar plots estàtics
+# 3.3.1. Generar barres verticals simples per colors i per rank
+> anim <- ggplot(gdp_formatted, aes(rank, group = country_name, 
+                                  fill = as.factor(country_name), color = as.factor(country_name))) +
+    geom_tile(aes(y = value/2,
+                  height = value,
+                  width = 0.9), alpha = 0.8, color = NA)
+> anim
+
+# 3.3.2. Afegir nom de països a la part inferior (y=0) de cada barra del ranking i Value_lbl a la part superior de cada barra
+> anim <- ggplot(gdp_formatted, aes(rank, group = country_name, 
+                fill = as.factor(country_name), color = as.factor(country_name))) +
+  geom_tile(aes(y = value/2,
+                height = value,
+                width = 0.9), alpha = 0.8, color = NA) +
+  geom_text(aes(y = 0, label = paste(country_name, " ")), vjust = 0.2, hjust = 1) +
+  geom_text(aes(y=value,label = Value_lbl, hjust=0))
+> anim
+
+# 3.3.3. Intercanviar coordenades x->y, y->x (barres verticals)
+anim <- ggplot(gdp_formatted, aes(rank, group = country_name, 
+                fill = as.factor(country_name), color = as.factor(country_name))) +
+  geom_tile(aes(y = value/2,
+                height = value,
+                width = 0.9), alpha = 0.8, color = NA) +
+  geom_text(aes(y = 0, label = paste(country_name, " ")), vjust = 0.2, hjust = 1) +
+  geom_text(aes(y=value,label = Value_lbl, hjust=0)) +
+  coord_flip(clip = "off", expand = FALSE)
+> anim
+
+# 3.3.4. Escala de y (ara x) passa a continu (notació no exponencial) i escala de X invertida - Primera posició amunt.
+anim <- ggplot(gdp_formatted, aes(rank, group = country_name, 
+                fill = as.factor(country_name), color = as.factor(country_name))) +
+  geom_tile(aes(y = value/2,
+                height = value,
+                width = 0.9), alpha = 0.8, color = NA) +
+  geom_text(aes(y = 0, label = paste(country_name, " ")), vjust = 0.2, hjust = 1) +
+  geom_text(aes(y=value,label = Value_lbl, hjust=0)) +
+  coord_flip(clip = "off", expand = FALSE) + 
+  scale_y_continuous(labels = scales::comma) + 
+  scale_x_reverse()
+> anim
+
+# 3.3.5.Eliminar guies, captions explicatius de cada color de la part dreta. Gràfica a full screen
+> anim <- ggplot(gdp_formatted, aes(rank, group = country_name, 
+                fill = as.factor(country_name), color = as.factor(country_name))) +
+  geom_tile(aes(y = value/2,
+                height = value,
+                width = 0.9), alpha = 0.8, color = NA) +
+  geom_text(aes(y = 0, label = paste(country_name, " ")), vjust = 0.2, hjust = 1) +
+  geom_text(aes(y=value,label = Value_lbl, hjust=0)) +
+  coord_flip(clip = "off", expand = FALSE) + 
+  scale_y_continuous(labels = scales::comma) + 
+  scale_x_reverse() + 
+  guides(color = "none", fill = "none")
+> anim
+
+# 3.3.6.Eliminar les mètriques i els captions per a x,y
+> anim <- ggplot(gdp_formatted, aes(rank, group = country_name, 
+                fill = as.factor(country_name), color = as.factor(country_name))) +
+  geom_tile(aes(y = value/2,
+                height = value,
+                width = 0.9), alpha = 0.8, color = NA) +
+  geom_text(aes(y = 0, label = paste(country_name, " ")), vjust = 0.2, hjust = 1) +
+  geom_text(aes(y=value,label = Value_lbl, hjust=0)) +
+  coord_flip(clip = "off", expand = FALSE) +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_reverse() +
+  guides(color = "none", fill = "none") +
+  theme(axis.line=element_blank(),
+        axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+         axis.title.y=element_blank(),
+        legend.position="none",
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.grid.major.x = element_line( size=.1, color="grey" ),
+        panel.grid.minor.x = element_line( size=.1, color="grey" ),
+        plot.title=element_text(size=25, hjust=0.5, face="bold", colour="grey", vjust=-1),
+        plot.subtitle=element_text(size=18, hjust=0.5, face="italic", color="grey"),
+        plot.caption =element_text(size=8, hjust=0.5, face="italic", color="grey"),
+        plot.background=element_blank(),
+       plot.margin = margin(2,2, 2, 4, "cm"))
+> anim
+
+# 3.37.Definir els frames per la variable any, definint temps de transició entre barres (transition_lenght) i permanència de cada frame (state_lenght) en temps
+> anim <- ggplot(gdp_formatted, aes(rank, group = country_name, 
+                fill = as.factor(country_name), color = as.factor(country_name))) +
+  geom_tile(aes(y = value/2,
+                height = value,
+                width = 0.9), alpha = 0.8, color = NA) +
+  geom_text(aes(y = 0, label = paste(country_name, " ")), vjust = 0.2, hjust = 1) +
+  geom_text(aes(y=value,label = Value_lbl, hjust=0)) +
+  coord_flip(clip = "off", expand = FALSE) +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_reverse() +
+  guides(color = "none", fill = "none") +
+  theme(axis.line=element_blank(),
+        axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+         axis.title.y=element_blank(),
+        legend.position="none",
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.grid.major.x = element_line( size=.1, color="grey" ),
+        panel.grid.minor.x = element_line( size=.1, color="grey" ),
+        plot.title=element_text(size=25, hjust=0.5, face="bold", colour="grey", vjust=-1),
+        plot.subtitle=element_text(size=18, hjust=0.5, face="italic", color="grey"),
+        plot.caption =element_text(size=8, hjust=0.5, face="italic", color="grey"),
+        plot.background=element_blank(),
+        plot.margin = margin(2,2, 2, 4, "cm")) +
+  transition_states(year, transition_length = 4, state_length = 1, wrap = FALSE)
+
+# 3.3.8. Fixar tamany barra màxima i modificar la mètrica per l'eix X
+> anim <- ggplot(gdp_formatted, aes(rank, group = country_name, 
+                fill = as.factor(country_name), color = as.factor(country_name))) +
+  geom_tile(aes(y = value/2,
+                height = value,
+                width = 0.9), alpha = 0.8, color = NA) +
+  geom_text(aes(y = 0, label = paste(country_name, " ")), vjust = 0.2, hjust = 1) +
+  geom_text(aes(y=value,label = Value_lbl, hjust=0)) +
+  coord_flip(clip = "off", expand = FALSE) +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_reverse() +
+  guides(color = "none", fill = "none") +
+  theme(axis.line=element_blank(),
+        axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+         axis.title.y=element_blank(),
+        legend.position="none",
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.grid.major.x = element_line( size=.1, color="grey" ),
+        panel.grid.minor.x = element_line( size=.1, color="grey" ),
+        plot.title=element_text(size=25, hjust=0.5, face="bold", colour="grey", vjust=-1),
+        plot.subtitle=element_text(size=18, hjust=0.5, face="italic", color="grey"),
+        plot.caption =element_text(size=8, hjust=0.5, face="italic", color="grey"),
+        plot.background=element_blank(),
+        plot.margin = margin(2,2, 2, 4, "cm")) +
+  transition_states(year, transition_length = 4, state_length = 1, wrap = FALSE) + 
+  view_follow(fixed_x = TRUE)
+> anim
+
+# 3.3.9. Afegir títols i captions a cada frame o gràfica
+> anim <- ggplot(gdp_formatted, aes(rank, group = country_name, 
+                fill = as.factor(country_name), color = as.factor(country_name))) +
+  geom_tile(aes(y = value/2,
+                height = value,
+                width = 0.9), alpha = 0.8, color = NA) +
+  geom_text(aes(y = 0, label = paste(country_name, " ")), vjust = 0.2, hjust = 1) +
+  geom_text(aes(y=value,label = Value_lbl, hjust=0)) +
+  coord_flip(clip = "off", expand = FALSE) +
+  scale_y_continuous(labels = scales::comma) +
+  scale_x_reverse() +
+  guides(color = "none", fill = "none") +
+  theme(axis.line=element_blank(),
+        axis.text.x=element_blank(),
+        axis.text.y=element_blank(),
+        axis.ticks=element_blank(),
+        axis.title.x=element_blank(),
+         axis.title.y=element_blank(),
+        legend.position="none",
+        panel.background=element_blank(),
+        panel.border=element_blank(),
+        panel.grid.major=element_blank(),
+        panel.grid.minor=element_blank(),
+        panel.grid.major.x = element_line( size=.1, color="grey" ),
+        panel.grid.minor.x = element_line( size=.1, color="grey" ),
+        plot.title=element_text(size=25, hjust=0.5, face="bold", colour="grey", vjust=-1),
+        plot.subtitle=element_text(size=18, hjust=0.5, face="italic", color="grey"),
+        plot.caption =element_text(size=8, hjust=0.5, face="italic", color="grey"),
+        plot.background=element_blank(),
+        plot.margin = margin(2,2, 2, 4, "cm")) +
+  transition_states(year, transition_length = 4, state_length = 1, wrap = FALSE) + 
+  view_follow(fixed_x = TRUE) + 
+  labs(title = 'GDP per Year : {closest_state}',  
+       subtitle  =  "Top 10 Countries",
+       caption  = "GDP in Billions USD | Data Source: World Bank Data") 
+> anim
+
+# 3.3.10a. Generar animació (igual que cridar >anim)
+> animate(anim, 200, fps = 20,  width = 640, height = 480) 
+>
+       
+# 3.3.10b. Exportar frames a fitxer GIF
+> animate(anim, 200, fps = 20,  width = 1200, height = 1000, 
+        renderer = gifski_renderer("gganim.gif"), end_pause = 15, start_pause =  15) 
+>
+
+# 3.3.10c. Exportar frames a fitxer AVI
+> animate(anim, 200, fps = 20,  width = 1200, height = 1000, 
+        renderer = av_renderer("gganim.avi"), end_pause = 15, start_pause =  15) 
+>
+
+# --------------- 4. Shiny()
+# Carregar paquets previs
+> install.packages('tidyverse') # Descarregar paquet (1a vegada)
+> library (tidyverse)           # Cada cop que obrim sessió
+> install.packages('ggplot2')   # Descarregar paquet (1a vegada)
+> library (ggplot2)             # Cada cop que obrim sessió
+> install.packages('plotly')    # Descarregar paquet (1a vegada)
+> library (plotly)              # Cada cop que obrim sessió
+>
+
+# Carregar paquet
+> install.packages('shiny')  # Descarregar paquet (1a vegada)
+> library (shiny)           # Cada cop que obrim sessió
+>
+
+# 4.1a. Aplicació bàsica en Shiny amb plot_ly
+ui <- fluidPage(	selectizeInput(	inputId = "cities", 
+    				label = "Select a city", 
+    				choices = unique(txhousing$city), 
+    				selected = "Abilene",
+    				multiple = TRUE
+  	      		    ),
+  		plotlyOutput(outputId = "plot")
+	     )
+
+server <- function(input, output, ...) 
+	{	output$plot <- renderPlotly (
+		{	plot_ly(txhousing, x = ~date, y = ~median,color=~city) %>%
+      				filter(city %in% input$cities) %>%
+      				group_by(city) %>%
+      				add_lines()
+  		})
+	}
+shinyApp(ui, server)
+
+# 4.1b. Aplicació bàsica en Shiny amb ggplot
+ui <- fluidPage(	selectizeInput(	inputId = "cities", 
+    				label = "Select a city", 
+    				choices = unique(txhousing$city), 
+    				selected = "Abilene",
+    				multiple = TRUE
+  	      		    ),
+  			plotlyOutput(outputId = "plot")
+	     )
+
+server <- function(input, output, ...) 
+	{	output$plot <- renderPlotly (
+		{	plotC <- ggplot(filter(txhousing,city %in% input$cities), aes(x = date, y = median,color=city)) + geom_line(group="city")
+      			ggplotly(plotC)
+  		})
+	}
+shinyApp(ui, server)
+
+# 4.1.2. Exemple resize()
+cities <- unique(txhousing$city)
+ui <- fluidPage(	selectizeInput(	inputId = "cities", 
+    					label = NULL,
+    					# placeholder is enabled when 1st choice is an empty string
+    					choices = c("Please choose a city" = "", cities), 
+    					multiple = TRUE
+  				),
+  			plotlyOutput(outputId = "p")
+)
+
+server <- function(input, output, session, ...) 
+	{	output$p <- renderPlotly({	req(input$cities)
+    						if (identical(input$cities, "")) return(NULL)
+    						p <- ggplot(data = filter(txhousing, city %in% input$cities)) + 
+      							geom_line(aes(date, median, group = city,color=city))
+    						Wheight <- session$clientData$output_p_height / 2
+    						Wwidth <- session$clientData$output_p_width / 2
+    						ggplotly(p, height = Wheight, width = Wwidth)
+  					})
+	}
+shinyApp(ui, server)
+
+# 4.2.1. Events de dragging
+ui <- fluidPage(	radioButtons("plotType", "Plot Type:", choices = c("ggplotly", "plotly")),
+  	plotlyOutput("plot"),
+  	verbatimTextOutput("hover"),
+  	verbatimTextOutput("click"),
+  	verbatimTextOutput("brushing"),
+  	verbatimTextOutput("selecting"),
+  	verbatimTextOutput("brushed"),
+  	verbatimTextOutput("selected")		)
+
+server <- function(input, output, session) {
+  nms <- row.names(mtcars)
+
+  output$plot <- renderPlotly({
+    p <- if (identical(input$plotType, "ggplotly")) { ggplotly(ggplot(mtcars, aes(x = mpg, y = wt, customdata = nms)) + geom_point())
+    				    } else {	plot_ly(mtcars, x = ~mpg, y = ~wt, type='scatter', mode='markers',customdata = nms)
+    					  }
+    p %>% layout(dragmode = "select") %>% event_register("plotly_selecting")
+  })
+  
+  output$hover <- renderPrint({	d <- event_data("plotly_hover")
+    			if (is.null(d)) "Hover events appear here (unhover to clear)" else d })
+  output$click <- renderPrint({	d <- event_data("plotly_click")
+    			if (is.null(d)) "Click events appear here (double-click to clear)" else d })
+  output$brushing <- renderPrint({	d <- event_data("plotly_brushing")
+    			if (is.null(d)) "Brush extents appear here (double-click to clear)" else d })
+  output$selecting <- renderPrint({   	d <- event_data("plotly_selecting")
+    			if (is.null(d)) "Brush points appear here (double-click to clear)" else d })
+  output$brushed <- renderPrint({	d <- event_data("plotly_brushed")
+    			if (is.null(d)) "Brush extents appear here (double-click to clear)" else d })
+  output$selected <- renderPrint({	d <- event_data("plotly_selected")
+    			if (is.null(d)) "Brushed points appear here (double-click to clear)" else d })
+  
+}
+shinyApp(ui, server, options = list(display.mode = "showcase"))
+
+
+# 4.2.2. Events en gràfiques 3D
+ui <- fluidPage(
+  plotlyOutput("plot"),
+  verbatimTextOutput("hover"),
+  verbatimTextOutput("click"),
+  verbatimTextOutput("relayout")
+)
+
+server <- function(input, output, session) 
+{ output$plot <- renderPlotly({ plot_ly(mtcars, x = ~wt, y = ~mpg, z = ~disp, color = ~factor(cyl)) %>%
+ 				   event_register("plotly_legendclick") %>% event_register("plotly_legenddoubleclick") })
+  
+  output$hover <- renderPrint({  d <- event_data("plotly_hover")
+    		if (is.null(d)) "Hover events appear here" else d })
+  
+  output$click <- renderPrint({	d <- event_data("plotly_click")
+    		if (is.null(d)) "Click events appear here" else d })
+  
+  output$relayout <- renderPrint({	d <- event_data("plotly_relayout")$scene.camera$eye
+    			if (is.null(d)) "Camera eye info" else d })
+  
+}
+shinyApp(ui, server)
+
+# 4.2.3. Event d'entrada numèrica amb textbox
+ui <- fluidPage(numericInput("rows", "Quants cotxes?",5),
+  		dataTableOutput(outputId = "p")
+	     )
+
+server <- function(input, output, ...) 
+	{	output$p <- renderDataTable (
+		{	head(mtcars,input$rows)
+  		})
+	}
+shinyApp(ui, server)
+
+# 4.2.4. Event Event d'entrada numèrica amb slider
+ui <- fluidPage(sliderInput("rows", "Quants cotxes?",1,40,5,step=1),
+  		dataTableOutput(outputId = "plot")
+	     )
+
+server <- function(input, output, ...) 
+	{	output$plot <- renderDataTable (
+		{	head(mtcars,input$rows)
+  		})
+	}
+shinyApp(ui, server)
+
+# 4.2.5. Event d'entrada booleana  amb checkboxInput
+ui <- fluidPage(checkboxInput("somevalue", "Activat?", FALSE),
+  		verbatimTextOutput("valor")
+	     )
+
+server <- function(input, output, ...) 
+	{ output$valor <- renderText({ input$somevalue })
+	}
+shinyApp(ui, server)
+
+# 4.2.6. Event Event d'entrada numèrica amb CheckboxGroupInput
+ui <- fluidPage(checkboxGroupInput("variable", "Variables a mostrar:",
+                     c("Cilindres" = "cyl",
+                       "Transmissió" = "am",
+                       "Engranatges" = "gear")),
+  		tableOutput("data")
+	     )
+
+server <- function(input, output, ...) 
+	{ output$data <- renderTable( {
+    		mtcars[, c("mpg", input$variable), drop = FALSE]
+  	  			      }, rownames = TRUE)
+	}
+shinyApp(ui, server)
+
+
+#4.3. Encapsular aplicació shiny per a web
+
+# 4.3.1. Event d'entrada numèrica amb textbox
+# ----------------- Test1.Rmd
+shinyApp(
+ui <- fluidPage(numericInput("rows", "Quants cotxes?",5),
+  		dataTableOutput(outputId = "p")
+	     )
+
+server <- function(input, output, ...) 
+	{	output$p <- renderDataTable (
+		{	head(mtcars,input$rows)
+  		})
+	}
+options=list(height=500)
+)
+# ----------------- FI Test1.Rmd
+

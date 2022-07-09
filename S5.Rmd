@@ -1,0 +1,217 @@
+---
+title: "Seminari 5"
+author: "Miquel Monge Dalmau"
+date: '2022-05-17'
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r requeriments}
+if(!require(tidyverse)) install.packages("tidyverse")
+if(!require(ggplot2)) install.packages("ggplot2")
+if(!require(dplyr)) install.packages("dplyr")
+if(!require(ggcorrplot)) install.packages("ggcorrplot")
+
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(forcats)
+library(ggthemr)
+library( ggcorrplot)
+library(devtools)
+library("factoextra")
+ggthemr("fresh")
+```
+
+1.- Suposem que volem veure la correlació entre dues variables Sepal.Length i Petal.Length.
+a) Comenceu fent una gràfica de punts/”scatterplot”. Trobeu algun patró entre ambdues variables.
+```{r exercici1a}
+ggplot(iris, aes(Sepal.Length, Petal.Length)) + geom_point() + ggtitle("Scatter Plot Petal vs. Sepal Length") + xlab("Sepal length") + ylab("Petal length")
+```
+b) Proveu d’utilitzar línies (utilitzant geom_line()). Creieu que és una bona opció en aquest cas?
+```{r exercici1b}
+ggplot(iris, aes(Sepal.Length, Petal.Length)) + geom_line() + ggtitle("Scatter Plot Petal vs. Sepal Length") + xlab("Sepal length") + ylab("Petal length")
+```
+En aquest cas utilitzar línies no és una bona opció, de fet ens introduiria error. Sembla que hi ha flors amb una longitud de pètal entre 2-4 cm, mentre que la figura de l’apartat (a) ens mostrava clarament que no.
+
+
+c) Agregueu un canal que afegeixi al gràfic de punts de l’apartat (a), un ombrejat basat en càlculs estadístics de funcions de suavitzat (canal ‘stat/geom_smooth()’ vist a classe avui). Proveu de fer una regressió i ajusteu el vostre interval de confiança al 90% (NOTA: mireu quin dels tres mètodes s’ajusta millor a les vostres dades: linear model (“lm”), generalized linear model (“glm”) i local regression fitting “loess”.
+```{r exercici1c}
+ggplot(iris, aes(Sepal.Length, Petal.Length)) + geom_point() + geom_smooth(method='lm', level=.9) + ggtitle("Scatter Plot Petal vs. Sepal Length") + xlab("Sepal length") + ylab("Petal length")
+
+ggplot(iris, aes(Sepal.Length, Petal.Length)) + geom_point() + geom_smooth(method='glm', level=.9) + ggtitle("Scatter Plot Petal vs. Sepal Length") + xlab("Sepal length") + ylab("Petal length")
+
+ggplot(iris, aes(Sepal.Length, Petal.Length)) + geom_point() + geom_smooth(method='loess', level=.9) + ggtitle("Scatter Plot Petal vs. Sepal Length") + xlab("Sepal length") + ylab("Petal length")
+```
+2.- Seguint amb la correlació entre dues variables, en aquest cas Sepal.Length i Sepal.Width,
+a) Pinteu els punts de l’scatter point amb diferents colors segons les espècies.
+
+```{r exercici2a}
+ggplot(iris, aes(Sepal.Length, Sepal.Width, color = factor(Species))) + geom_point() + ggtitle("Scatter Plot Petal vs. Sepal Length") + xlab("Sepal length") + ylab("Sepal Width") + scale_color_discrete("Species")
+
+```
+b) Com en l’exercici anterior, agregueu un canal que afegeixi al gràfic de punts de l’apartat (a), un ombrejat basat en càlculs estadístics de funcions de suavitzat (canal ‘stat/geom_smooth()’ vist a classe avui).
+
+```{r exercici2b}
+ggplot(iris, aes(Sepal.Length, Sepal.Width, color = factor(Species))) + geom_point() + geom_smooth() + ggtitle("Scatter Plot Petal vs. Sepal Length") + xlab("Sepal length") + ylab("Sepal Width") + scale_color_discrete("Species")
+
+```
+
+c) Afegiu una forma al tipus d’espècie. Poseu un títol i un nom adient als eixos
+
+```{r exercici2c}
+ggplot(iris, aes(Sepal.Length, Sepal.Width, color = Species)) + geom_point(aes(shape=Species)) + geom_smooth() + ggtitle("Scatter Plot Petal vs. Sepal Length") + xlab("Sepal length") + ylab("Sepal Width")
+```
+Donats els colors (per defecte) de les espècies versicolor i virginica, i la seva similitud en alguns patrons entre l’amplada i longitud del sèpal (width-lenght), utilitzar la forma ens ajuda.
+
+
+d) Fent ús dels facets feu un gràfic de 3 files que contingui la mateixa informació que la figura anterior però on cada espècie es vegi separadament.
+```{r exercici2d}
+ex2c <- ggplot(iris, aes(Sepal.Length, Sepal.Width, color = Species)) + geom_point(aes(shape=Species)) + geom_smooth() + ggtitle("Scatter Plot Petal vs. Sepal Length") + xlab("Sepal length") + ylab("Sepal Width")
+
+ex2c + facet_grid(Species~.) # especies per files
+```
+3.- Voleu conèixer alguns aspectes de la distribució de la longitud del sèpal segons l’espècie. Responeu en els següents apartats, què utilitzaríeu: un boxplot o diagrama de violins. Feu ambdós gràfics i raoneu la resposta.
+a) Us interessa majorment conèixer les medianes i els outliers que teniu en cada espècie segons la longitud
+
+```{r exercici3}
+ggplot(iris, aes(Species, Sepal.Length)) + geom_boxplot() + xlab("Species") + ylab("Sepal Length") + ggtitle("Distribució de la longitud del sèpal segons l'espècie")
+
+ggplot(iris, aes(Species, Sepal.Length)) + geom_violin() + xlab("Species") + ylab("Sepal Length") + ggtitle("Distribució de la longitud del sèpal segons l'espècie")
+```
+Els boxplots ens mostra molt clarament les medianes i outliers de la longitud dels pètals per cada espècie, i els violins la distribució d’aquests.
+
+NOTA: Podríem afegir algunes mesures estadístiques fent us del canal stat_summary, tot i que no em fet exemples. Per exemple afegim un punt vermell que ens marqui la mediana en cada violí:
+
+```{r exercici3extra}
+ggplot(iris, aes(Species, Sepal.Length)) + geom_violin() + stat_summary(fun = mean, geom="point") + xlab("Species") + ylab("Sepal Length") + ggtitle("Distribució de la longitud del sèpal segons l'espècie")
+```
+
+Volem fer un correlograma utilitzant el dataframe mtcars que ens mostri la correlació entre les sis variables: mpg, disp, hp, drat, wt, qsec.
+a) Per això comenceu convertint el vostre dataframe a una tibble de nom df_tb
+```{r exercici3.2.a}
+df_tb <- as_tibble(mtcars)
+df_tb
+```
+b) Apliqueu la següent comanda new <-df_tb[, c(1,3,4,5,6,7)]. Què fa aquesta comanda?
+-> Aquesta comanda està seleccionant les columnes 1, 3, 4, 5, 6 i 7 de la tibble inicial.
+```{r exercici3.2.a}
+new <-df_tb[, c(1,3,4,5,6,7)]
+new
+```
+c) Intenteu crear una tibble igual que new a partir de df_tb usant eines de la llibreria dplyr que em vist en classes anteriors
+```{r exercici3.2.a}
+new2 <- select(df_tb, "mpg", "disp", "hp", "drat", "wt", "qsec")
+new2
+
+# alternativament
+new2 <-select(df_tb, c(1,3,4,5,6,7))
+```
+d) Ara que ja tenim les dades preparades, feu la matriu de correlació (que anomenarem cormat), arrodonint els valors a dos decimals. Per això utilitzeu les comandes que hem vist avui a la primera part de la classe (secció 2.2). Com és aquesta matriu?
+```{r exercici3.2.a}
+cormat <- round(cor(new), 2)
+ggcorrplot(cormat) + ggtitle("Matriu correlació")
+cormat
+```
+Com bona matriu de correlació, la matriu cormat té valors uns a la diagonal (on cada variable es relaciona amb sí mateixa), és simètrica, i els seus valors estan compresos entre -1 i 1. Recordem que com més alt és el valor absolut més correlacionades estan les variables.
+
+
+f) Afegiu els coeficients de correlació fent servir l’argument ‘lab=TRUE’ de la funció ggcorrplot(). Si teniu dubtes feu servir l’ajuda de R (?ggcorrplot). Compareu la vostra visualització amb la matriu cormat que heu creat en l’apartat (d). Ha fet algun canvi la funció ggcorrplot() a l’hora de visualitzar la matriu?
+
+```{r exercici3.2.a}
+cormat <- round(cor(new), 2)
+ggcorrplot(cormat, lab=TRUE, hc.order = TRUE) + ggtitle("Matriu correlació")
+```
+Aquest argument fa ús de la funció hclust() de R. hclust() és una funció d’anàlisi jeràrquica de clústers sobre un conjunt de diferències i mètodes per analitzar-lo.
+Al posar ‘hc.order=TRUE’, se’ns han reordenat a l’eix x i y les diferents variables per clústers.
+
+```{r exercici3.2.a}
+cormat <- round(cor(new), 2)
+ggcorrplot(cormat, hc.order = TRUE, method = "circle") + ggtitle("Matriu correlació")
+```
+i) Donada la simetria de la matriu i que l’anti-diagonal està formada per 1’s, podem mostrar just la part de sobre (“upper”) o de sota (“lower”) de l’anti-diagonal. Això ens permetrà reduir la “carrega de visualització de la informació” (i serà d’agrair per la gent que vegi la nostra gràfica). Indirectament centrarem la seva atenció en el realment important. Per això podem jugar amb l’argument type de la funció ggcorrplot().
+```{r exercici3.2.a}
+cormat <- round(cor(new), 2)
+ggcorrplot(cormat, lab = TRUE, type = "lower", colors = c("#6D9EC1", "white", "#E46726"))  + ggtitle("Matriu correlació")
+
+cormat <- round(cor(new), 2)
+ggcorrplot(cormat, lab = TRUE, type = "upper", colors = c("#6D9EC1", "white", "#E46726")) + ggtitle("Matriu correlació")
+```
+2.- Continuem amb el dataframe mtcars. Anem a fer un visualització reduint la dimensionalitat amb un PCA.
+a) Fem una nova tibble que anomenarem new2 on inclourà totes les variables de mtcars i les seves respectives observacions, excloent les variables ‘vs’ i ‘am’ del dataframe original (és a dir, ens quedem amb totes les variables excepte aquestes dues). NOTA: Això ho fem perquè el PCA funciona millor amb dades numèriques, per tant excloem les variables categòriques.
+
+Per tant ens quedem amb les columnes de la 1 a la 7, la 11 i la 12.
+
+```{r exercici3.2.a}
+df_tb <- as_tibble(mtcars)
+new2 <- select(df_tb, c(1:7,10,11))
+new2 <-df_tb[, c(1:7,10,11)]
+new2 <- transform(new2, cyl = as.numeric(cyl)) # sino interpeta cyl cm a factor i no fa el pca
+new2
+```
+b) Assigneu a una nova variable anomenada mtcars_pca la matriu resultant d’aplicar la funció prcomp() vista en la primera part de la classe d’avui. Centreu les variables a zero utilitzant l’argument ‘center=TRUE’, i escaleu-les per a que tinguin variança igual a 1, fent us de l’argument ‘scale. =TRUE’.
+```{r exercici3.2.a}
+mtcars_pca<-prcomp(new2, center=TRUE, scale.=TRUE)
+```
+
+Ara que ja tenim el paquet (factoextra) i llibreries que necessitem, anem a crear grups segons la procedència dels cotxes. Els dividirem en una de les tres categories, segons la procedència dels vehicles: 1) nord-americans, 2) japonesos i 3) europeus. Per això us donem la comanda:
+```{r exercici3.2.a}
+mtcars.country <- c(rep("Japan", 3), rep("US",4), rep("Europe", 7),rep("US",3), "Europe", rep("Japan", 3), rep("US",4), rep("Europe", 3), "US", rep("Europe", 3))
+```
+
+c1) Fent ús de l’ajuda i del exemple que se us ha recordat al principi de la classe (secció 2.2) i vam veure a la teoria 7 utilitzant el dataframe iris, feu una primera visualització. A l’utilitzar la funció fviz_pca_ind() per aquest exemple:
+- utilitzeu un col. ind (color) vingui donat pel país del cotxe (mtcars.country)
+- afegiu el·lipses i un títol de la llegenda segons els grups creats segons l’origen del cotxe.
+
+Quines conclusions extraieu?
+
+```{r exercici3.2.a}
+fviz_pca_ind(mtcars_pca,
+             geom.ind = "point",
+             col.ind = mtcars.country,
+             palette = c("#00AFBB", "#E7B800", "#FC4E07"),
+             addEllipses = TRUE,
+             legend.title = "Groups"
+)
+```
+Exemple de conclusions: Els cotxes americans formen un clúster diferent a la dreta. Els cotxes europeus estan una mica al centre i estan menys agrupats que cap dels altres dos grups.
+
+
+c2) Feu un biplot, que inclogui la posició de cada mostra en termes de PC1 i PC2. El biplot, a més de veure les variables individualment, us mostrarà com es relacionen les variables inicials. Per fer dit biplot, utilitzeu la funció fviz_pca_biplot de manera similar a l’exercici anterior però afegiu una fletxa i el text referent a les variables inicials tot fent us de l’argument geom.var. Podeu extreure conclusions noves?
+
+```{r exercici3.2.a}
+fviz_pca_biplot(mtcars_pca,
+             geom.ind = "point",
+             geom.var = c("arrow", "text"),
+             col.ind = mtcars.country,
+             palette = c("#00AFBB", "#E7B800", "#FC4E07"),
+             addEllipses = TRUE,
+             legend.title = "Groups"
+)
+```
+Exemple de conclusions: Observant els eixos, veieu que els cotxes nord-americans es caracteritzen per tenir valors elevats de cyl, disp i wt. Els cotxes japonesos, en canvi, es caracteritzen per tenir un mpg elevat.
+
+
+
+
+c3) Per descomptat, teniu disponibles moltes components principals, cadascuna de les quals es correlaciona de manera diferent amb les variables originals. També podeu demanar a fviz_pca_biplot que dibuixi aquestes altres components fent us de l’argument axes.
+Fent ús de l’argument axes, feu ara la visualització segons la tercera i quarta components principals (PC3 i PC4). Creieu que podeu veure molta informació? Per què?
+```{r exercici3.2.a}
+fviz_pca_biplot(mtcars_pca,
+             axes = c(3,4),
+             geom.ind = "point",
+             geom.var = c("arrow", "text"),
+             col.ind = mtcars.country,
+             palette = c("#00AFBB", "#E7B800", "#FC4E07"),
+             addEllipses = TRUE,
+             legend.title = "Groups"
+)
+```
+Com podeu observar ens han canviat els eixos (ara es mostren PC3 i PC4). Aquí no hi veieu molt, però això no és massa sorprenent. PC3 i PC4 expliquen percentatges molt reduïts de la variança total, de manera que seria sorprenent que trobéssiu que eren molt informatius i separessin els grups o revelessin patrons aparents.
+
+
+I llavors quina informació ens ha donat aquest anàlisis PCA? Podeu fer un resum del que heu trobat
+RESUM possible: Tot realitzant un anàlisis PCA mitjançant el conjunt de dades mtcars, podem veure una clara separació entre els cotxes americans i japonesos al llarg d’un component principal que està estretament correlacionat amb cyl, disp, wt i mpg. Això ens proporciona algunes pistes per a futurs anàlisis; si intentéssim construir un model de classificació per identificar l’origen d’un cotxe, aquestes variables podrien ser útils.

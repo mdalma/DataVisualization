@@ -1,0 +1,81 @@
+---
+title: "Seminari 6"
+author: "Miquel Monge Dalmau"
+date: '2022-05-19'
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r requeriments}
+if(!require(tidyverse)) install.packages("tidyverse")
+if(!require(ggplot2)) install.packages("ggplot2")
+if(!require(dplyr)) install.packages("dplyr")
+if(!require(ggcorrplot)) install.packages("ggcorrplot")
+if(!require(treemapify)) install.packages("treemapify")
+
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(forcats)
+library(ggthemr)
+library( ggcorrplot)
+library(devtools)
+library(treemapify)
+library("factoextra")
+ggthemr("fresh")
+```
+
+```{r ex1_treemaps}
+mtcars.country <- c(rep("Japan", 3), rep("US",4), rep("Europe", 7),rep("US",3), "Europe", rep("Japan", 3), rep("US",4), rep("Europe", 3), "US", rep("Europe", 3))
+
+ggplot(mtcars, aes(area = disp, fill = mtcars.country, label = disp, subgroup = mtcars.country)) + geom_treemap()  + geom_treemap_subgroup_border() + geom_treemap_subgroup_text(color='white', place='center')
+```
+```{r ex1_treemaps}
+mtcars.id=row.names(mtcars) # nom cotxe
+
+ggplot(mtcars, aes(area = disp, fill = mtcars.country, label = disp, subgroup = mtcars.country)) + geom_treemap()  + geom_treemap_subgroup_border() + geom_treemap_subgroup_text(color='white') + geom_treemap_text(aes(label=mtcars.id))
+
+```
+En el PCA ja havíem vist que els cotxes nord-americans es caracteritzen per tenir valors elevats de cyl, disp i wt. En aquest treemap hem definit l’àrea de les rajoles/caselles segons el desplaçament, disp, i altre cop veiem que els cotxes d’US són els que fan un desplaçament major. Els cotxes japonesos clarament tenen un desplaçament menor.
+
+
+```{r ex2}
+starwars %>% 
+            filter(mass < 1000) %>%
+            ggplot(aes(height, mass)) + geom_point() + geom_smooth(level=.98, method = 'lm') + xlab('Alçada')+ylab('Massa')+ggtitle("Relació alçada massa dels personatges de Starwars")
+
+
+```
+
+Repetiu l’exercici separant els personatges per sexe I ajustant el vostre patró (per cada ‘sex’) amb un interval de confiança del 95%. Fer la visualització el més clara possible separant cada sexe en una fila d’un facet respectivament i assignant-li un color diferent per cadascun
+```{r ex2}
+starwars %>% drop_na(sex) %>%
+            filter(mass < 1000) %>% 
+            ggplot(aes(height, mass, color = sex)) + geom_point() + geom_smooth(method = 'lm', level = .98) + facet_grid(sex~.) + xlab("Alçada") + ylab("Massa") + ggtitle(" Relació alçada-massa segons sexe")
+
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

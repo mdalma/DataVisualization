@@ -1,0 +1,98 @@
+---
+title: "seminari_3"
+author: "Miquel Monge Dalmau"
+date: '2022-03-18'
+output:
+  pdf_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r requeriments}
+library(tidyverse)
+```
+
+```{r create_data}
+data1 <- data.frame( name=letters[1:5], value=c(17,18,20,22,24) )
+
+data2 <- data.frame( name=letters[1:5], value=c(20,18,21,20,20) )
+
+data3 <- data.frame( name=letters[1:5], value=c(24,23,21,19,18) )
+```
+
+```{r pie_function}
+# agafem el path on està la nostra funció plot_pie()
+path <- file.path(getwd(), "plot_pie.R")
+source(path)
+```
+
+```{r exercici_1}
+# set path on es guardaran els arxius png
+setwd(file.path(getwd()))
+
+# pie_data1
+png(filename = "pie_data1.png", width = 800, height = 600)
+plot_pie(data1, c(10, 53, 55, 75, 93))
+dev.off()
+
+# pie_data2
+png(filename = "pie_data2.png", width = 800, height = 600)
+plot_pie(data2, c(10,35,53,75,93))
+dev.off()
+
+# pie_data3
+png(filename = "pie_data3.png", width = 800, height = 600)
+plot_pie(data3, c(10,29,50,75,93))
+dev.off()
+```
+
+```{r exercici_2}
+ggplot(data1, aes(x=name, y=value, fill=name)) + geom_bar(stat = "identity")
+
+# o el que és el mateix en aquest cas on stat=”identity
+ggplot(data1, aes(name, value, fill = name)) + geom_col()
+```
+En el diagrama de barres veiem diferencies significants que no es veien en els diagrames de sectors circulars.
+! L’ull humà és més sensible a diferenciar alçades de barres que no pas a diferenciar entre angles. Només utilitzem diagrames de sectors circulars quan les diferencies proporcionals siguin molt grans. En un exemple com aquest, clarament els diagrames de barres ens donen més informació.
+
+```{r exercici_3}
+# Si volem saber quantes files i columnes tenim
+glimpse(starwars)
+```
+```{r exercici_3.1}
+ggplot(starwars, aes(height)) + geom_histogram(binwidth = 10)
+ggplot(starwars, aes(height)) + geom_freqpoly()
+```
+```{r exercici_3.1b}
+ggplot(starwars, aes(height)) + geom_density()
+```
+
+Aquí semblaria que hi ha personatges amb alçades entre 230-240 cm mentre en l’histograma veiem que no n’hi ha.
+
+
+```{r exercici_3.2}
+ggplot(starwars, aes(gender)) + geom_bar()
+ggplot(starwars, aes(sex)) + geom_bar()
+```
+Gender és una variable discreta qualitativa. Volem comparar quants personatges hi ha de cada gènere, per tant sembla adient fer un diagrama de barres
+
+Hi ha menys actors amb sexe masculí que amb gènere masculí. El gènere si feu ?starwars veureu que es refereix al rol que adapten els personatges i personatges com R2-D2 no tenen sexe però adapten un gènere masculí.
+
+
+```{r exercici_3.3}
+ggplot(starwars, aes(height, gender)) + geom_boxplot() + coord_flip()
+```
+Si utilitzem geom_point(), contestar la pregunta b és fàcil (també ho era pels seguidors de Star Wars o els que ja heu vist la imatge que us he posat en la resposta de l’exercici 1. El personatge més alt és de gènere masculí. Però contestant l’apartat a ens equivocaríem segurament si no féssim un diagrama de caixes (boxplot). A més el boxplot ens dona molta més informació sobre la distribució de les alçades versus el gènere.
+
+I curiosament la mitjana del gènere masculí i la de NA és la mateixa (cosa que no es veia en el scatterplot)
+
+
+```{r exercici_4}
+ggplot(starwars, aes(fct_infreq(eye_color))) + geom_bar() + coord_flip() + ylab("Nombre personatges") + xlab("Color d'ulls")
+```
+Els dos colors majoritaris són el marró seguit del blau. Un color minoritari podria ser el rosa.
+
+

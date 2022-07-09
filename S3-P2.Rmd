@@ -1,0 +1,67 @@
+---
+title: "seminari 3_2"
+author: "Miquel Monge Dalmau"
+date: '2022-03-18'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r requeriments}
+library(tidyverse)
+library(dplyr)
+```
+
+```{r exercici_1}
+# Seleccioneu només el nom i gènere del conjunt de dades starwars.
+
+starwars %>% select(height, gender)
+select(starwars, height, gender)
+```
+
+```{r exercici_2}
+# Seleccioneu els personatges que són humans. Després seleccioneu els que no.
+
+starwars %>% filter(species == "Human")
+filter(starwars, species == "Human")
+
+# els q no
+filter(starwars, species != "Human")
+```
+```{r exercici_3.a}
+# Seleccioneu els personatges que són humans. Després seleccioneu els que no.
+# a. pas a pas
+
+temp <- select(starwars, name, gender)
+sub_df <- filter(temp, gender == "feminine")
+sub_df
+```
+```{r exercici_3.b}
+# b) pipes
+
+femini_sub <- starwars %>% filter(gender =='feminine') %>% select(name, gender)
+femini_sub
+```
+```{r exercici_4}
+# partint del subgrup creat
+arrange(femini_sub, desc(name))
+
+# amb pipes
+starwars %>% filter(gender =='feminine') %>% select(name, gender) %>% arrange(desc(name))
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+

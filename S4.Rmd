@@ -1,0 +1,101 @@
+---
+title: "seminari_4"
+author: "Miquel Monge Dalmau"
+date: '2022-03-18'
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r requeriments}
+library(tidyverse)
+library(dplyr)
+```
+
+```{r exercici_1}
+starwars %>% group_by(gender) %>% summarise(n())
+
+# Alternativament
+
+starwars %>% group_by(gender) %>% count()
+```
+
+
+```{r exercici_2}
+starwars %>%
+  select(name, height, species) %>%
+  mutate(height_norm = height / mean(height, na.rm = TRUE))
+```
+```{r exercici_3}
+starwars %>%
+  group_by(species) %>%
+  filter(gender == 'masculine') %>%
+  count()
+```
+```{r exercici_3}
+starwars %>%
+  group_by(species) %>%
+  filter(gender == 'masculine') %>%
+  summarize(mean(height, na.rm = TRUE))
+```
+```{r part2_ex_1}
+ggplot(starwars, aes(height, mass)) + geom_point()
+```
+
+Per treure el warning hem de treure doncs els personatges que tenen un valor NA en la columna height o mass. Al treure personatges estem traient files, per tant usem filtre().
+
+```{r part2_ex_1}
+starwars_clean <- starwars %>%
+                    filter(height != "NA", mass != "NA")
+ggplot(starwars_clean, aes(height, mass)) + geom_point()
+```
+Clarament en el cercle vermell tenim un outlier (un personatge amb una massa molt gran per la seva alçada) que ens dificulta veure la tendència de la massa respecte l’alçada. De fet podríem inclús respondre erròniament que tot i que a mesura que augmenta l’alçada, la massa augmenta, aquest creixement no és significatiu.
+
+```{r part2_ex_1}
+starwars_3 <- starwars_clean %>%
+                  filter(mass < 1000)
+ggplot(starwars_3, aes(height, mass)) + geom_point()
+````
+```{r part2_ex_1}
+starwars_3 <- starwars_clean %>%
+                  filter(name != "Jabba Desilijic Tiure")
+ggplot(starwars_3, aes(height, mass, color = gender)) + geom_point()
+````
+Se n’ha parlat molt a la premsa, que la majoria dels personatges de starwars eren masculins o tenien un rol masculí (gènere del dataset). De fet aquí veiem clarament que hi ha pocs personatges de gènere femení. Podem intuir també que la seva relació alçada-massa no és alta.
+
+```{r part2_ex_2}
+starwars_4 <- starwars %>%
+                filter(species == "Human" | species == "Droid") %>%
+                filter(height != "NA")
+
+ggplot(starwars_4, aes(species, height)) + geom_boxplot()
+
+# comptar personatges cada especie
+starwars_4 %>% 
+  group_by(species) %>%
+  count()
+
+robots <- filter(starwars, species == "Droid", height != "NA")
+# scatter plot
+ggplot(robots, aes(name, height)) + geom_point()
+````
+La distribució de l’alçada dels humans tot i que és més variada per sota la seva respectiva mediana (que la dels robots), és tota ella menys variada que en el cas dels robots. En el cas dels robots el boxplot ens diu que la distribució de les alçades dels robots està majoritàriament per sobre les medianes, de fet la màxima alçada està molt per sobre la mediana. De fet en aquest segon cas, el mínim està molt a prop de la mediana. El boxplot dels robots ens està indicant ja alguna cosa (veure apartat c).
+
+
+```{r part_4.a}
+iris_long <- gather(iris, metric, value, -Species) #totes les variables(columnes) menys species
+````
+
+```{r part_4.b}
+ggplot(iris_long, aes(Species, value)) + geom_col() + facet_wrap(~metric)
+````
+```{r part_4.b}
+Petal_unit <- iris %>% unite(Petal, Petal.Width, Petal.Length, sep = '_')
+head(Petal_unit, 5)
+````
+
+
+
+

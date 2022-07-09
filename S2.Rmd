@@ -1,0 +1,74 @@
+---
+title: "seminari_2"
+author: "Miquel Monge Dalmau"
+date: "18/3/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r requeriments}
+if(!require(tidyverse)) install.packages("tidyverse")
+if(!require(ggplot2)) install.packages("ggplot2")
+
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r intro}
+# view(mtcars)
+# ?mtcars
+# str(mtcars)
+```
+
+```{r exercici_1}
+ggplot(mtcars, aes(factor(cyl), fill = factor(cyl))) + geom_bar(width = 0.5) + xlab("Cylinders") + ylab("Nombre de cotxes") + scale_fill_discrete("#Cylinders")
+```
+
+```{r exercici_2}
+ggplot(mtcars, aes(factor(cyl), fill = factor(am))) + geom_bar(position="dodge") + xlab("Number of Cylinders") + ylab("Number of cars") + scale_fill_discrete("Engine", labels = c("Automatic", "Manual"))
+```
+Sembla que la major part dels cotxes de 4 cilindres tenen una transmissió manual, en el cas de 6 cilindres ja tenim algun cotxe més amb transmissió automàtica que manual i en el cas de 8 cilindres, encara més. També veiem globalment que tenim pocs cotxes amb 6 cilindres, i dels que més en tenim són dels de 8 cilindres.
+Però, aquesta gràfica no ens mostra la informació que volem d’una forma simple. Fem el que ens diu l’enunciat utilitzant l’argument posició a veure si ens ajuda. Per això, especifiquem, com ens diu l’enunciat, geom_bar(position=”dodge”):
+
+```{r exercici_3.1}
+ggplot(mtcars, aes(hp)) + geom_histogram(binwidth = 10) + xlab("Gross horsepower") + ylab("Number of cars")
+```
+Avui hem vist just dues maneres de mostrar distribucions, via histogrames i diagrames de caixes (boxplots). Hem vist que els histogrames eren útils quan volíem mostrar la distribució d’una funció contínua com és el cas de ‘hp’ .
+
+```{r exercici_3.2}
+my_boxplot <- ggplot(mtcars, aes(factor(cyl), mpg)) + geom_boxplot() + xlab("Cylinders") + ylab("Miles/(US) gallon")
+my_boxplot
+```
+OBSERVACIONS que ens aporta aquest nou gràfic: Ara podem veure per exemple ràpidament que: i) la mediana de milles de galó dels cotxes amb 8 cilindres és al voltant de 15, mentre que la de 6 cilindres és al voltant de 20, i puja fins més de 25mpg en el cas dels cotxes amb 4 cilindres. (el qual tindria sentit); ii) tenim outliers en el cas dels cotxes amb 8 cilindres (representats amb dos punts fora el boxplot); iii) els quartils Q1 i Q3 i per tant la distribució ( és molt més amplia en termes de ‘mpg’ ) varia més en el cas dels cotxes de 4 cilindres, per exemple; iv) la desviació, casi és nul·la pels cotxes de sis cilindres per exemple (gairebé no tenim bigotis).
+
+```{r exercici_3.2b}
+my_boxplot + coord_flip()
+```
+```{r exercici_3.2d}
+my_boxplot <- ggplot(mtcars, aes(factor(cyl), mpg)) + geom_boxplot(color="red", fill="blue", alpha=0.2) + xlab("Cylinders") + ylab("Miles/(US) gallon") + coord_flip()
+my_boxplot
+```
+Color canvia el color referent als contorns del boxplot, fill el color de dins, i alpha ens varia l’opacitat del color amb el que pintem.
+
+
+```{r exercici_3.2d2}
+ggplot(mtcars,aes(x=factor(cyl),y=mpg, color=factor(cyl))) + geom_boxplot() + xlab('Cylinders') + ylab('Miles per Gallon') + scale_color_discrete("Cylinders")
+```
+```{r exercici_3.2d2}
+ggplot(mtcars,aes(x=factor(cyl),y=mpg, fill=factor(cyl))) + geom_boxplot() + xlab('Cylinders') + ylab('Miles per Gallon') + scale_fill_discrete("Cylinders")
+```
+De la mateixa manera que havíem vist en el seminari 1, pintar els boxplots segons el grup del nombre de cilindres al que pertanyen, no ens aporta cap informació nova respecte el mateix boxplot sense color. El mapeig de color per grups via aes(), ens podria aportar si afegim en el mateix gràfic el color als grups generats per una variable discreta com pot ser el tipus transmissió del cotxe (factor(am)) o la forma del motor (factor(vs)).
+
+
+```{r exercici_3.2d3}
+ggplot(mtcars,aes(x=factor(cyl),y=mpg, fill=factor(am))) + geom_boxplot() + xlab('Cylinders') + ylab('Miles per Gallon') + scale_fill_discrete("Transmission", labels = c("Automatic", "Manual"))
+```
+
+De la mateixa manera que havíem vist en el seminari 1, pintar els boxplots segons el grup del nombre de cilindres al que pertanyen, no ens aporta cap informació nova respecte el mateix boxplot sense color. El mapeig de color per grups via aes(), ens podria aportar si afegim en el mateix gràfic el color als grups generats per una variable discreta com pot ser el tipus transmissió del cotxe (factor(am)) o la forma del motor (factor(vs)).
+
+
+
+

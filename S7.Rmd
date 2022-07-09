@@ -1,0 +1,212 @@
+---
+title: "seminari7"
+author: "Miquel Monge Dalmau"
+date: '2022-05-20'
+output: word_document
+---
+
+```{r requeriments}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(forcats)
+#library(ggthemr)
+library(ggcorrplot)
+library(devtools)
+library(treemapify)
+library(ggmap)
+library(maps)     # controrns paisos, continents, ..
+library(mapdata)  # esquemés de resolució més alta
+library(ozmaps)
+library(sf)
+library("factoextra")
+#ggthemr("fresh")
+# ggthemr_reset()
+```
+
+
+```{r maps}
+# SINTAXI --> map_data("nom")
+usa <- map_data("usa")
+str(usa)
+```
+L’estructura d’aquests dataframes són senzilles:
+    • long - és la longitud. A l'oest del meridià primer aquestes són negatives.
+    • lat – és la latitud.
+    • order - només mostra en quin ordre ggplot ha de "connectar els punts"
+    • region & subregion - indiquen quina regió o subregió envolta un conjunt de punts.
+    • group - és molt important. Les funcions de ggplot2 poden adoptar un argument de grup que controla (entre altres coses) si els punts adjacents         haurien d’estar connectats per línies. Si formen el mateix grup, es connecten, però si estan en grups diferents, no ho fan.
+        Essencialment, tenir punts en diferents grups significa que ggplot "aixeca el bolígraf" quan va entre ells.
+
+
+a) Dibuixa mapa de usa
+```{r polygon_maps}
+ggplot(usa, aes(long, lat, group = group)) + geom_polygon() + coord_quickmap() + ggtitle("Mapa de USA") + xlab("Longitud") + ylab("Latitud")
+```
+b) mapa de Nova Zelanda
+```{r polygon_maps_nz}
+nz <- map_data("nz")
+ggplot(nz, aes(long, lat, group = group)) + geom_polygon() + coord_quickmap() + ggtitle("Mapa de Nova Zelanda") + xlab("Longitud") + ylab("Latitud")
+```
+
+(c) Utilitzeu el clàssic tema de llum fosca per a ggplot2 (theme_bw), adequat per als mapes. theme_set(theme_bw()
+```{r polygon_maps_theme}
+nz <- map_data("nz")
+
+ggplot(nz, aes(long, lat, group = group)) + geom_polygon() + coord_quickmap() + ggtitle("Mapa de Nova Zelanda") + xlab("Longitud") + ylab("Latitud") + theme_set(theme_bw())
+```
+(d) Ara en canvi feu us de fill i colour que ja hem usat en altres geometries per omplir de blanc (“white”) el fons del mapa i de posar els contorns en gris (“grey50”).
+```{r polygon_maps_fill}
+nz <- map_data("nz")
+
+ggplot(nz, aes(long, lat, group = group)) + geom_polygon(fill = 'white', colour = 'grey50') + coord_quickmap() + ggtitle("Mapa de Nova Zelanda") + xlab("Longitud") + ylab("Latitud") + theme_set(theme_bw())
+```
+```{r map_state}
+states <- map_data("state") # fronteres estatals
+str(states)
+```
+(e) Pinteu els estats (atribut=’region’) de colors posant les fronteres en blanc. Afegiu guides(fill=FALSE) per tal d’eliminar la llegenda.
+
+```{r map_state_colors}
+ggplot(states, aes(long, lat, group = group, fill = region)) + geom_polygon(colour='white') + coord_quickmap() + ggtitle("Mapa de USA") + xlab("Longitud") + ylab("Latitud") + guides(fill=FALSE)
+```
+(f) Dibuixeu el mapa de l’estat de Florida en gris i amb contorn negre.
+```{r map_state_florida}
+fo_df <- subset(states, region == "florida") # estat de Florida
+
+ggplot(fo_df, aes(long, lat, group = group)) + geom_polygon(fill = 'grey', colour='black') + coord_quickmap() + ggtitle("Mapa de Florida") + xlab("Longitud") + ylab("Latitud") + guides(fill=FALSE)
+```
+```{r map_state_florida}
+fo_df <- subset(states, region == "florida") # estat de Florida
+
+ggplot(fo_df, aes(long, lat, group = group)) + geom_polygon(fill = 'grey50', colour='black') + coord_quickmap() + ggtitle("Mapa de Florida") + xlab("Longitud") + ylab("Latitud") + guides(fill=FALSE) + theme_nothing()
+```
+Repetiu el procés amb California, i assigneu a una variable de nom ‘CA_base’ un ggplot d’un mapa com el de l’apartat anterior però de California (amb background buit).
+
+```{r map_state_california}
+CA_df <- subset(states, region == "california") # estat de Florida
+
+CA_base <- ggplot(data = CA_df, mapping = aes(x = long, y = lat, group = group)) + coord_quickmap()+ geom_polygon(color = "black", fill = "gray")+ theme_nothing()
+CA_base
+```
+(i) Extraieu ara en un subconjunt els comptats de California:
+```{r map_county_florida}
+counties <- map_data("county")
+CA_county <- subset(counties, region == "california")
+
+head(counties)
+```
+(j) Afegiu a la vostra variable CA_base creada en l’apartat anterior un geom_polygon() que contingui les dades del subconjunt CA_county, i el color de les fronteres entre comptats estigui blanc (deixeu fill=NA).
+```{r map_state_CA_county}
+CA_base + geom_polygon(data = CA_county, fill = NA, color = "white")
+
+# Podem tornar a situar la frontera estatal, fent:
+CA_base + geom_polygon(data = CA_county, fill = NA, color = "white") + geom_polygon(fill=NA, color='black')
+```
+Feu us de geom_polygon() per dibuixar el mapa, feu el mapa amb fons blanc i contorn (colour=”grey50”) i afegiu theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+
+```{r part3}
+mi_counties <- map_data("county", "michigan")
+
+# Podem tornar a situar la frontera estatal, fent:
+ggplot(mi_counties, aes(long, lat, group=group)) + geom_polygon(fill='white', color='grey50') + coord_quickmap() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + ggtitle("County Michigan") + xlab("Longitud") + ylab("Latitud")
+```
+```{r part3_sf}
+oz_states <- ozmaps::ozmap_states
+oz_states
+```
+(a) Dibuixeu el mapa de oz_states tot traient la graella del fons
+```{r part3_sf}
+oz_states <- ozmaps::ozmap_states
+
+ggplot(oz_states) + geom_sf() + coord_sf() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+```
+(b) En segon lloc, extraieu els límits electorals d’una forma simplificada utilitzant la funció ms_simplify() del paquet rmapshaper.
+
+```{r part3_sf}
+oz_votes <- rmapshaper::ms_simplify(ozmaps::abs_ced)
+oz_votes
+```
+Ara que teniu ambdós conjunts de dades per representar les fronteres estatals (oz_states) i electorals (oz_votes) en un mateix mapa, afegiu dues capes geom_sf(), una per les dades contingudes en oz_states i l’altra per les dades contingudes en oz_votes
+
+```{r part3_sf}
+oz_states <- ozmaps::ozmap_states
+oz_votes <- rmapshaper::ms_simplify(ozmaps::abs_ced)
+
+ggplot() + geom_sf(data=oz_states) + geom_sf(data=oz_votes) + coord_sf() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+```
+(c) Afegiu l’estètica de farciment de color (fill) en els estats segons el seu nom (NAME). NOTA: Per tal de que no hi hagi conflicte amb la informació de oz_votes, posarem en la capa geom_sf() de oz_votes: geom_sf(data = oz_votes, fill=NA).
+
+```{r part3_sf}
+ggplot() + geom_sf(data=oz_states, aes(fill=NAME)) + geom_sf(data=oz_votes, fill=NA) + coord_sf() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank())
+```
+2.- En aquest exercici anem a dibuixar un mapa electoral de Sydney partint del mapa que tenim. Per això hem de fer tres passos:
+(a) Primer, hem d’extreure les dades del mapa pels electors rellevants. Copieu el següent filtratge:
+
+b) Després hem de buscar la regió que ens interessa, Sydney. Per això, simplement feu zoom a la regió de Sydney especificant xlim = c(150.97, 151.3), ylim = c(-33.98, -33.79) a coord_sf()
+
+(c) Finalment, utilitzeu geom_sf_label() per superposar les etiquetes amb el nom de cada electorat (poseu l’estètica label=NAME)
+
+```{r part3_sf}
+sydney_map <- ozmaps::abs_ced %>% filter(NAME %in% c("Sydney", "Wentworth", "Warringah", "Kingsford Smith", "Grayndler", "Lowe", "North Sydney", "Barton", "Bradfield", "Banks", "Blaxland", "Reid", "Watson", "Fowler", "Werriwa", "Prospect", "Parramatta", "Bennelong", "Mackellar", "Greenway", "Mitchell", "Chifley", "McMahon"))
+
+ggplot(sydney_map) +geom_sf(aes(fill = NAME), show.legend = FALSE) + coord_sf(xlim = c(150.97, 151.3), ylim = c(-33.98, -33.79)) + geom_sf_label(aes(label=NAME))
+```
+3.- Ens podria interessar per exemple mostrar les ubicacions de les capitals australianes al mapa anterior. Per això, necessitem tenir les dades de les ciutats junt a la seva latitud i longitud. Un cop les tinguem, només hem d’afegir una altra geometria, per exemple, geom_point() que mostri aquesta informació.
+
+(a) Construïu el següent dataframe fent una tibble, i assigneu-lo a una variable de nom oz_capitals :
+
+(b) Afegiu la informació del dataframe amb punts de color vermell al mapa d’Australia que contenia les fronteres estatals (oz_states) i electorals (oz_votes)
+
+```{r part3_sf}
+oz_capitals <- tibble::tribble(
+                  ~city, ~lat, ~lon,
+                  "Sydney", -33.8688, 151.2093,
+                  "Melbourne",-37.8136, 144.9631,
+                  "Brisbane", -27.4698, 153.0251,
+                  "Adelaide", -34.9285, 138.6007,
+                  "Perth", -31.9505, 115.8605,
+                  "Hobart", -42.8821, 147.3272,
+                  "Canberra", -35.2809, 149.1300,
+                  "Darwin", -12.4634, 130.8456,
+)
+
+oz_states <- ozmaps::ozmap_states
+oz_votes <- rmapshaper::ms_simplify(ozmaps::abs_ced)
+
+ggplot() + geom_sf(data=oz_states) + geom_sf(data=oz_votes) + coord_sf() + theme(panel.grid.major = element_blank(), panel.grid.minor = element_blank()) + geom_point(oz_capitals, mapping = aes(lon, lat), color='red')
+
+```
+4.- Per aquest exercici nem a fer servir un arxiu georeferenciat amb les comunes de la Ciutat Autònoma de Buenos Aires, disponible online en format geojson, un estàndard de representació de dades geogràfiques que és fàcil d'usar
+
+
+```{r part3_sf}
+Barris <- st_read('https://bitsandbricks.github.io/data/CABA_barrios.geojson')
+poblacio <- read.csv("https://bitsandbricks.github.io/data/caba_pob_barrios_2010.csv")
+suaci2018 <- read.csv('https://bitsandbricks.github.io/data/gcba_suaci_2018.csv')
+
+head(Barris)
+head(poblacio)
+head(suaci2018)
+
+# Com el nostre dataframe de contactes a SUACI té una columna amb el mateix nom que conté les mateixes categories, sumar-li la informació de població és tan fàcil com usar la funció de dplyr left_join
+new <- left_join(suaci2018, poblacio)
+(a)
+head(new)
+```
+(a) Sumeu la informació de Barris per a que us quedi:
+```{r part3_sf}
+new <- left_join(Barris, new)
+head(new)
+```
+(b) Feu una comanda com la que heu fet abans per dibuixar el mapa amb geom_sf. Però ara les dades són el vostre nou dataframe creat en l’apartat (a). I volem dibuixar un mapa amb els barris de la ciutat que mostri la quantitat de sol·licituds de la ciutadania per càpita. És a dir que el gràfic estigui pintat segons els contactes/població. PISTA: Feu un mapeig pintant el gràfic segons la relació desitjada
+
+
+```{r part3_sf}
+ggplot(new) + geom_sf(aes(fill=CONTACTOS/POBLACION)) + coord_sf()
+
+ggplot(new) + geom_sf(aes(fill=CONTACTOS/POBLACION)) + coord_sf() + scale_fill_distiller(palette = "Spectral")
+```
+
+
+

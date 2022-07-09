@@ -1,0 +1,174 @@
+---
+title: "Seminari 9"
+author: "Miquel Monge Dalmau"
+date: '2022-05-21'
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r requeriments}
+library(tidyverse)
+library(ggplot2)
+library(dplyr)
+library(forcats)
+library(ggcorrplot)
+library(devtools)
+library(treemapify)
+library(ggmap)
+library(maps)     # controrns paisos, continents, ..
+library(mapdata)  # esquemés de resolució més alta
+library(ozmaps)
+library(sf)
+library(factoextra)
+library(plotly)
+library(shiny)
+library(gganimate)
+```
+
+```{r import_data}
+# set pwd
+SWorld <- read.csv('./Suicide rates 1985-2016.csv')
+
+# Modifiquem alguns noms d’atributs que contenen caràcters estranys
+names(SWorld)[1] <- "country"
+names(SWorld)[10] <- "gdp_for_year"
+names(SWorld)[11] <- "gdp_per_capita"
+view(SWorld)
+```
+
+1.- Feu una gràfica interactiva de barres i de línies sobre l’evolució dels suïcidis en la població de DONES d’Espanya per a franges d’edat (age) i contesta les preguntes sobre la gràfica.
+```{r ex1}
+SSpainF <- SWorld %>% filter(sex=='female' & country=='Spain')
+
+# Diagrama de barres
+gplotSSpainF <- ggplot(SSpainF, aes(year, suicides_no, color=age)) + geom_col()
+ggplotly(gplotSSpainF)
+# alternativament amb plotly
+plot_ly(SSpainF, x=~year, y=~suicides_no, color=~age, type='bar')
+
+
+# Gràfica de lineas
+plot_ly(SSpainF, x=~year, y=~suicides_no, color=~age) %>% add_lines()
+# alternativament
+plot_ly(SSpainF,x=~year, y=~suicides_no, color=~age, type='scatter', mode='lines')
+```
+2.- Construeix una gràfica interactiva de línies sobre l’evolució dels suïcidis en la població de HOMES d’Espanya per a franges d’edat (age) i contesta les preguntes sobre la gràfica.
+
+```{r ex2}
+SSpainM <- SWorld %>% filter(sex=='male' & country=='Spain')
+plot_ly(SSpainM, x=~year, y=~suicides_no, color=~age) %>% add_lines()
+# alternativament
+plot_ly(SSpainM, x=~year, y=~suicides_no, color=~age, type='scatter', mode='lines')
+# alternativament
+p <- ggplot(SSpainM, aes(year, suicides_no, color=age)) + geom_path()
+ggplotly(p)
+```
+3.- Fer una gràfica interactiva de línies sobre l’evolució dels suïcidis en la població conjunta d’HOMES i DONES d’Espanya per a franges d’edat (age) i contesta les preguntes sobre la gràfica.
+
+```{r ex3}
+# PAS 1: DATA MASSAGING. Abans de definir la gràfica, filtrem les observacions corresponents al país “Spain” i agrupem per a franges d’edat sumant el nombre de suïcidis d’homes i dones:
+
+SSPainFM <- SWorld %>% 
+                  filter(country == 'Spain') %>%
+                  select(year, suicides_no, population, sex, age, gdp_per_capita) %>%
+                  group_by(year, age) %>%
+                  summarise(numeroS=sum(suicides_no), poblacio=sum(population), PIB=mean(gdp_per_capita))
+
+view(SSPainFM)
+gplotSSpain <- ggplot(SSPainFM, aes(year, numeroS, color=age)) + geom_line()
+ggplotly(gplotSSpain)
+```
+4.- Visualitzar dues gràfiques interactives de línies per a comparar-les.
+
+a) Representa en una gràfica interactiva de línies el nombre de suïcidis d’HOMES per a tots els països (plotSWorldHomes). Quins són els 3 tres països amb més suïcidis els anys 1998 i 2014 i el país amb menys i el nombre de suïcidis de cada país?.
+
+b) Representa en una gràfica interactiva de línies el nombre de suïcidis de DONES per a tots els països (plotSWorlDones). Quins són els 3 tres països amb més suïcidis els anys 1998 i 2014 i el país amb menys i el nombre de suïcidis de cada país?.
+
+c) Posa les dues gràfiques anteriors (dones esquerra, homes dreta) en una mateixa pantalla i comenta 3 idees que es poden deduir veient les dues gràfiques.
+
+```{r ex4}
+# A
+# PAS 1: DATA MASSAGING. Abans de definir la gràfica, filtrem les observacions d’homes i les agrupem per país i any calculant diferents valors per país i any: nombre de suïcidis (suma), població (suma) i PIB (promig):
+SWorldHomes <- SWorld %>% 
+                    filter(sex=='male') %>%
+                    select(country, year, suicides_no, population, sex, age, gdp_per_capita) %>%
+                    group_by(country, year) %>%
+                     summarise(numeroS=sum(suicides_no), poblacio=sum(population), PIB=mean(gdp_per_capita))
+
+
+gplotSSWorldHomes <- ggplot(SWorldHomes, aes(x=year,y=numeroS, color=country)) + geom_line()
+ggplotly(gplotSSWorldHomes)
+
+# B
+SWorldDones <- SWorld %>% 
+                    filter(sex=='female') %>%
+                    select(country, year, suicides_no, population, sex, age, gdp_per_capita) %>%
+                    group_by(country, year) %>%
+                     summarise(numeroS=sum(suicides_no), poblacio=sum(population), PIB=mean(gdp_per_capita))
+
+
+gplotSSWorldDones <- ggplot(SWorldDones, aes(x=year,y=numeroS, color=country)) + geom_line()
+ggplotly(gplotSSWorldDones)
+
+# C
+subplot(gplotSSWorldHomes, gplotSSWorldDones)
+```
+5.- Guarda el darrer plot en un fitxer en format HTML en la carpeta de treball (wd) per a poder-se executar en un navegador. Digues què ocupa la versió estesa i la reduïda i prova d’executar-les en un navegador.
+
+
+```{r ex5}
+# Funció widget_size que guarda objecte plotly a format HTML
+widget_file_size <- function(p) {
+                    d <- getwd()
+                    withr::with_dir(d, htmlwidgets::saveWidget(p, "index.html"))
+                    f <- file.path(d, "index.html")
+                    mb <- round(file.info(f)$size / 1e6, 3)
+                    message("File is: ", mb," MB")
+}
+
+# Generar fitxer index.html
+plot <- subplot(gplotSSWorldHomes, gplotSSWorldDones)
+#widget_file_size(plot) # Versió completa HTML
+#widget_file_size(partial_bundle(plot)) # Versió reduida HTML
+```
+NOTA: NO FUNCIONA perquè ho estic fent en RMarkdown -> això fer-ho a la consola.
+
+
+
+6.- Visualitzar un scatter plot 3D sobre nombre de suicidis, població i PIB per país i guardar-el en format HTML. Pots comentar tres idees d’aquest scatter plot 3D?.
+```{r ex6}
+SWorldScatter <- SWorld %>% 
+                    select(country, year, suicides_no, population, sex, age, gdp_per_capita) %>%
+                    group_by(country) %>%
+                    summarise(numeroS=sum(suicides_no), poblacio=sum(population), PIB_per_capita=mean(gdp_per_capita))
+
+plot_ly(SWorldScatter, x=~numeroS, y=~poblacio, z=~PIB_per_capita, type='scatter3d', mode='markers', color=~country)
+```
+1. La majoria de països es concentren en la part baixa de la gràfica, propera al (0,0,0).
+2. Hi ha un conjunt de països liderats per Luxemburg amb un baix nombre de suïcidis i població però amb PIB per càpita creixent.
+3. Espanya es troba fora de la majoria de països concentrats en el (0,0,0) en un punt mig en totes les variables.
+4. Països molt poblats tenen un alt nombre de suïcidis, tiguin PIB baix (federació Russa, Brasil) com PIB alt (USA, Japó). No hi ha dades d’altres països molt poblats com China i l’India.
+5. Els països potents europeus (Alemanya, UK, França , Italia) també són clarament distingibles en la gràfica per les tres variables més o menys equilibrades.
+
+
+```{r ex6}
+# guardar en HTML
+# Funció widget_size que guarda objecte plotly a format HTML
+widget_file_size <- function(p) {
+                      d <- getwd()
+                      withr::with_dir(d, htmlwidgets::saveWidget(p, "scatterPlot3D.html"))
+                      f <- file.path(d, "index.html")
+                      mb <- round(file.info(f)$size / 1e6, 3)
+                      message("File is: ", mb," MB")
+}
+
+# widget_file_size(plot) # Versió completa HTML
+# widget_file_size(partial_bundle(plot)) # Versió reduida HTML
+# dona errors
+```
+
+
+

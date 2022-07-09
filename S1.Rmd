@@ -1,0 +1,56 @@
+---
+title: "Seminari 1"
+author: "Miquel Monge Dalmau"
+date: "18/2/2022"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r requeriments}
+if(!require(tidyverse)) install.packages("tidyverse")
+if(!require(ggplot2)) install.packages("ggplot2")
+
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r exercici1}
+cyl = mtcars$cyl # cilindres
+mpg = mtcars$mpg # km de galó
+
+ggplot(mtcars, aes(x = cyl, y = mpg)) + geom_point()
+str(mtcars)
+```
+
+```{r exercici2}
+ggplot(mtcars, aes(x = factor(cyl), y = mpg)) + geom_point()
+```
+Ara veiem que l'eix "x" ja no conté valors com el 5 o el 7, només els valors que existeixen en la variable "cyl" del dataset.
+
+De la gràfica veiem que els cotxes amb menus cilindres, en aquest cas 8, son els que menys consumeixen.
+
+```{r exercici3}
+ggplot(mtcars, aes(x = factor(cyl), y = mpg, color = cyl)) +
+  geom_point() 
+```
+No ens aporta cap informació, ja que la variable "cyl" ja apareix a la gràfica. El que sí aportaría informació sería posar el color d'una variable que no apareixi en la gràfica, o també canviar el tamany dels punts en funció a alguna altra variable. D'aquesta manera, amb la mateixa gràfica, seriem capaços d'aportar més informació, no només el de l'eix "x" i "y".
+
+```{r exercici4}
+ggplot(mtcars, aes(factor(cyl), mpg, color=factor(vs)))+geom_point()+ scale_x_discrete("Cylinders")+scale_y_continuous ("Miles per gallon(US)")+scale_colour_hue("Engine", labels = c("V-shaped","Straight"))
+```
+```{r exercici5}
+ggplot(mtcars, aes(factor(cyl), mpg, color=disp))+geom_point()+ scale_x_discrete("Cylinders")+scale_y_continuous("Miles per gallon(US)")+scale_color_continuous("Displacement")
+
+ggplot(mtcars, aes(mpg, disp, color=factor(cyl)))+geom_point()+ scale_x_continuous("Miles per gallon(US)")+ scale_y_continuous("Displacement")+scale_color_discrete("Cylinders")
+```
+```{r exercici6}
+ggplot(mtcars,aes(factor(cyl),mpg,shape=factor(vs)))+ geom_point()+ scale_x_discrete("Cylinders")+scale_y_continuous("Miles per
+12 gallon(US)")+ scale_shape_discrete("Engine", labels = c("V-shaped","Straight"))
+```
+
+
+
+
